@@ -24,6 +24,7 @@ dev_dependencies:
 
 flutter:
   assets:
+    - assets/logo.png
     - .env  # Tambahkan ini di bagian assets
   uses-material-design: true
 

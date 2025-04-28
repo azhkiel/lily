@@ -47,11 +47,12 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = false);
   }
 
-  @override
+      @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Login'),
+        centerTitle: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.storage),
@@ -65,44 +66,122 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _usernameController,
-                decoration: const InputDecoration(labelText: 'Username'),
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Username is required' : null,
-              ),
-              TextFormField(
-                controller: _passwordController,
-                decoration: const InputDecoration(labelText: 'Password'),
-                obscureText: true,
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Password is required' : null,
-              ),
-              const SizedBox(height: 20),
-              _isLoading
-                  ? const CircularProgressIndicator()
-                  : ElevatedButton(
-                      onPressed: _login,
-                      child: const Text('Login'),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Logo Section
+                Container(
+                  margin: const EdgeInsets.only(bottom: 40, top: 20),
+                  child: Image.asset(
+                    'assets/logo.png', // Replace with your logo path
+                    height: 150,
+                    width: 150,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                
+                // Welcome Text
+                Text(
+                  'Welcome Back',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Please login to continue',
+                  style: Theme.of(context).textTheme.bodyMedium, // Updated from bodyText2
+                ),
+                const SizedBox(height: 32),
+
+                // Username Field
+                TextFormField(
+                  controller: _usernameController,
+                  decoration: InputDecoration(
+                    labelText: 'Username',
+                    prefixIcon: const Icon(Icons.person),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const RegisterPage(),
+                    filled: true,
+                    fillColor: Colors.grey[100],
+                  ),
+                  validator: (value) =>
+                      value?.isEmpty ?? true ? 'Username is required' : null,
+                ),
+                const SizedBox(height: 20),
+
+                // Password Field
+                TextFormField(
+                  controller: _passwordController,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    prefixIcon: const Icon(Icons.lock),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                  );
-                },
-                child: const Text('Create an account'),
-              ),
-            ],
+                    filled: true,
+                    fillColor: Colors.grey[100],
+                  ),
+                  obscureText: true,
+                  validator: (value) =>
+                      value?.isEmpty ?? true ? 'Password is required' : null,
+                ),
+                const SizedBox(height: 24),
+
+                // Login Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : ElevatedButton(
+                          onPressed: _login,
+                          style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: const Text(
+                            'LOGIN',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        ),
+                ),
+                const SizedBox(height: 20),
+
+                // Register Link
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text("Don't have an account?"),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const RegisterPage(),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        'Sign Up',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
