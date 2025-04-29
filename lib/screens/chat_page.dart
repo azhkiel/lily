@@ -250,21 +250,28 @@ class _ChatPageState extends State<ChatPage> {
                 ),
               ),
             ),
-            // Konten pesan
-            Text(
-              message.message,
-              style: TextStyle(
-                color: isMe ? Colors.white : Colors.black,
-              ),
-            ),
-            const SizedBox(height: 4),
-            // Waktu pesan
-            Text(
-              '${time.hour}:${time.minute.toString().padLeft(2, '0')}',
-              style: TextStyle(
-                color: isMe ? Colors.white70 : Colors.black54,
-                fontSize: 10,
-              ),
+            // Konten pesan dan waktu dalam satu baris
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    message.message,
+                    style: TextStyle(
+                      color: isMe ? Colors.white : Colors.black,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${time.hour}:${time.minute.toString().padLeft(2, '0')}',
+                  style: TextStyle(
+                    color: isMe ? Colors.white70 : Colors.black54,
+                    fontSize: 10,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
