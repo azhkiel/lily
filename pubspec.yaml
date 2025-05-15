@@ -31,7 +31,22 @@ flutter_launcher_icons:
 flutter:
   assets:
     - assets/logo.png
-    - .env  # Tambahkan ini di bagian assets
+    - assets/onboarding1.png
+    - assets/onboarding2.png
+    - assets/onboarding3.png
+    - assets/icons_home.png
+    - assets/icons_note.png
+    - assets/icons_community.png
+    - assets/icons_profil.png
+    - assets/doctor1.png
+    - assets/doctor2.png
+    - assets/doctor3.png
+    - assets/article1.png
+    - assets/angry.png
+    - assets/happy.png
+    - assets/sad.png
+    - assets/cry.png
+    - .env  
   uses-material-design: true
 
   

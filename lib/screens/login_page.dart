@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import '../db/database.dart';
-import 'chat_page.dart';
+import 'home_page.dart';
 import 'register_page.dart';
 import 'database_viewer.dart';
 
@@ -18,38 +18,60 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
+
+  @override
+  void dispose() {
+    // Penting untuk membersihkan controller saat widget dihapus
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
-    final username = _usernameController.text.trim();
-    final password = _passwordController.text.trim();
+    try {
+      final username = _usernameController.text.trim();
+      final password = _passwordController.text.trim();
 
-    final user = await DatabaseHelper.instance.getUser(username);
+      // Tambahkan log untuk debugging
+      print('Attempting login with username: $username');
 
-    if (user == null || user['password'] != password) {
+      final user = await DatabaseHelper.instance.getUser(username);
+      print('User found: ${user != null}');
+
+      if (user == null || user['password'] != password) {
+        if (!mounted) return; // Cek apakah widget masih terpasang
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid username or password')),
+        );
+      } else {
+        print('Login successful, navigating to HomePage');
+        if (!mounted) return; // Cek apakah widget masih terpasang
+
+        // Gunakan pushAndRemoveUntil untuk membersihkan stack navigasi
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage(username: username)),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      print('Login error: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid username or password')),
+        SnackBar(content: Text('Error during login: ${e.toString()}')),
       );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ChatPage(
-            userId: user['id'] as int,
-            username: user['username'] as String, // Tambahkan username
-          ),
-        ),
-      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
-
-    setState(() => _isLoading = false);
   }
 
-      @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -84,21 +106,25 @@ class _LoginPageState extends State<LoginPage> {
                     height: 150,
                     width: 150,
                     fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      print('Error loading logo: $error');
+                      return const Icon(Icons.image_not_supported, size: 150);
+                    },
                   ),
                 ),
-                
+
                 // Welcome Text
                 Text(
                   'Welcome Back',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).primaryColor,
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Please login to continue',
-                  style: Theme.of(context).textTheme.bodyMedium, // Updated from bodyText2
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 32),
 
@@ -114,60 +140,67 @@ class _LoginPageState extends State<LoginPage> {
                     filled: true,
                     fillColor: Colors.grey[100],
                   ),
-                  validator: (value) =>
-                      value?.isEmpty ?? true ? 'Username is required' : null,
+                  validator:
+                      (value) =>
+                          value?.isEmpty ?? true
+                              ? 'Username is required'
+                              : null,
                 ),
                 const SizedBox(height: 20),
 
                 // Password Field
                 TextFormField(
-                    controller: _passwordController,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword 
-                            ? Icons.visibility_off 
+                  controller: _passwordController,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
                             : Icons.visibility,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
                       ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      filled: true,
-                      fillColor: Colors.grey[50],
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
                     ),
-                    obscureText: _obscurePassword,
-                    validator: (value) =>
-                        value?.isEmpty ?? true ? 'Password is required' : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[50],
                   ),
+                  obscureText: _obscurePassword,
+                  validator:
+                      (value) =>
+                          value?.isEmpty ?? true
+                              ? 'Password is required'
+                              : null,
+                ),
                 const SizedBox(height: 24),
 
                 // Login Button
                 SizedBox(
                   width: double.infinity,
                   height: 50,
-                  child: _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : ElevatedButton(
-                          onPressed: _login,
-                          style: ElevatedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                  child:
+                      _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : ElevatedButton(
+                            onPressed: _login,
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: const Text(
+                              'LOGIN',
+                              style: TextStyle(fontSize: 16),
+                            ),
                           ),
-                          child: const Text(
-                            'LOGIN',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                        ),
                 ),
                 const SizedBox(height: 20),
 
@@ -187,9 +220,7 @@ class _LoginPageState extends State<LoginPage> {
                       },
                       child: const Text(
                         'Sign Up',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
