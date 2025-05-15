@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import '../models/chat.dart';
 import '../db/database.dart';
 import '../services/ai_service.dart';
-import 'login_page.dart';
+import 'home_page.dart';
 
 class ChatPage extends StatefulWidget {
+  final String username;
   final int userId;
-  final String username; // Tambahkan parameter username
 
-  const ChatPage({Key? key, required this.userId, required this.username}) : super(key: key);
+  // Ubah konstruktor untuk membuat parameter opsional dengan nilai default
+  const ChatPage({Key? key, this.username = 'username', this.userId = 0})
+    : super(key: key);
 
   @override
   _ChatPageState createState() => _ChatPageState();
@@ -17,22 +19,22 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   // Controller untuk mengelola input text
   final _messageController = TextEditingController();
-  
+
   // Controller untuk mengelola scroll behavior
   final _scrollController = ScrollController();
-  
+
   // Focus node untuk mengelola keyboard focus
   final _focusNode = FocusNode();
-  
+
   // Daftar pesan dalam chat
   final List<Chat> _messages = [];
-  
+
   // ID khusus untuk AI
   final int _aiUserId = 0;
-  
+
   // State untuk loading indicator
   bool _isLoading = false;
-  
+
   // State untuk indikator AI sedang memproses
   bool _isAiThinking = false;
 
@@ -54,13 +56,19 @@ class _ChatPageState extends State<ChatPage> {
   // Memuat pesan dari database
   Future<void> _loadChats() async {
     if (_isLoading) return; // Hindari multiple calls
-    
+
     setState(() => _isLoading = true);
     try {
-      final chats = await DatabaseHelper.instance.getChats(widget.userId, _aiUserId);
-      setState(() => _messages
-        ..clear()
-        ..addAll(chats));
+      final chats = await DatabaseHelper.instance.getChats(
+        widget.userId,
+        _aiUserId,
+      );
+      setState(
+        () =>
+            _messages
+              ..clear()
+              ..addAll(chats),
+      );
       _scrollToBottom();
     } catch (e) {
       _showErrorSnackbar('Failed to load messages: ${e.toString()}');
@@ -93,7 +101,7 @@ class _ChatPageState extends State<ChatPage> {
 
       // 2. Dapatkan respons dari AI
       final aiResponse = await AIService.getAIResponse(message, widget.userId);
-      
+
       // 3. Simpan respons AI ke database
       final aiChat = Chat(
         senderId: _aiUserId,
@@ -106,10 +114,11 @@ class _ChatPageState extends State<ChatPage> {
       _addMessageToUI(aiChat);
     } on Exception catch (e) {
       // Handle error khusus untuk status 402 (Payment Required)
-      final errorMessage = e.toString().contains('402')
-          ? 'API service requires payment. Please check your subscription.'
-          : 'Failed to send message: ${e.toString().replaceAll('Exception: ', '')}';
-      
+      final errorMessage =
+          e.toString().contains('402')
+              ? 'API service requires payment. Please check your subscription.'
+              : 'Failed to send message: ${e.toString().replaceAll('Exception: ', '')}';
+
       _showErrorSnackbar(errorMessage);
       _messageController.text = message; // Kembalikan pesan jika gagal
     } finally {
@@ -141,10 +150,7 @@ class _ChatPageState extends State<ChatPage> {
   // Menampilkan error snackbar
   void _showErrorSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 3),
-      ),
+      SnackBar(content: Text(message), duration: const Duration(seconds: 3)),
     );
   }
 
@@ -152,7 +158,7 @@ class _ChatPageState extends State<ChatPage> {
   void _logoutAndGoToLogin() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const LoginPage()),
+      MaterialPageRoute(builder: (context) => const HomePage(username: '')),
     );
   }
 
@@ -160,33 +166,33 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Chat with AI - ${widget.username}'), // Tampilkan username di appbar
+        title: Text(
+          'Chat with AI - ${widget.username}',
+        ), // Tampilkan username di appbar
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: _logoutAndGoToLogin,
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadChats,
-          ),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadChats),
         ],
       ),
       body: Column(
         children: [
           Expanded(
-            child: _isLoading && _messages.isEmpty
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    controller: _scrollController,
-                    itemCount: _messages.length + (_isAiThinking ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (_isAiThinking && index == _messages.length) {
-                        return _buildAIThinkingIndicator();
-                      }
-                      return _buildChatBubble(_messages[index]);
-                    },
-                  ),
+            child:
+                _isLoading && _messages.isEmpty
+                    ? const Center(child: CircularProgressIndicator())
+                    : ListView.builder(
+                      controller: _scrollController,
+                      itemCount: _messages.length + (_isAiThinking ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (_isAiThinking && index == _messages.length) {
+                          return _buildAIThinkingIndicator();
+                        }
+                        return _buildChatBubble(_messages[index]);
+                      },
+                    ),
           ),
           _buildMessageInput(),
         ],
@@ -219,7 +225,8 @@ class _ChatPageState extends State<ChatPage> {
   Widget _buildChatBubble(Chat message) {
     final isMe = message.senderId == widget.userId;
     final time = message.timestamp;
-    final senderName = isMe ? widget.username : 'AI Assistant'; // Tentukan nama pengirim
+    final senderName =
+        isMe ? widget.username : 'AI Assistant'; // Tentukan nama pengirim
 
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
@@ -230,9 +237,10 @@ class _ChatPageState extends State<ChatPage> {
         margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isMe 
-              ? Theme.of(context).primaryColor 
-              : (message.isAI ? Colors.green[100] : Colors.grey[300]),
+          color:
+              isMe
+                  ? Theme.of(context).primaryColor
+                  : (message.isAI ? Colors.green[100] : Colors.grey[300]),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -245,8 +253,10 @@ class _ChatPageState extends State<ChatPage> {
                 senderName,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: isMe ? Colors.white70 : 
-                    (message.isAI ? Colors.green[800] : Colors.black87),
+                  color:
+                      isMe
+                          ? Colors.white70
+                          : (message.isAI ? Colors.green[800] : Colors.black87),
                 ),
               ),
             ),
@@ -258,9 +268,7 @@ class _ChatPageState extends State<ChatPage> {
                 Flexible(
                   child: Text(
                     message.message,
-                    style: TextStyle(
-                      color: isMe ? Colors.white : Colors.black,
-                    ),
+                    style: TextStyle(color: isMe ? Colors.white : Colors.black),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -292,12 +300,13 @@ class _ChatPageState extends State<ChatPage> {
               decoration: InputDecoration(
                 hintText: 'Type a message...',
                 border: const OutlineInputBorder(),
-                suffixIcon: _isLoading
-                    ? const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : null,
+                suffixIcon:
+                    _isLoading
+                        ? const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : null,
               ),
               onSubmitted: (_) => _sendMessage(),
               enabled: !_isLoading && !_isAiThinking,

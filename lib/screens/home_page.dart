@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mentaly/screens/chat_screen.dart';
+import 'package:mentaly/models/chat.dart';
+import '';
 import 'package:mentaly/theme/app_theme.dart';
 import 'package:mentaly/widget/bottom_nav.dart';
 import 'package:mentaly/db/database.dart';
@@ -240,7 +241,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                               // Ubah bagian ini dari mood['emoji']! menjadi Image.asset
                               child: Image.asset(
-                                mood['asset'],
+                                mood['assets'],
                                 width: 40,
                                 height: 40,
                               ),
@@ -399,11 +400,26 @@ class _HomePageState extends State<HomePage> {
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.note), label: 'Note'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Community'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
+          BottomNavigationBarItem(
+            icon: ImageIcon(AssetImage('assets/icons_home.png')),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: ImageIcon(AssetImage('assets/icons_note.png')),
+            label: 'Note',
+          ),
+          BottomNavigationBarItem(
+            icon: ImageIcon(AssetImage('assets/logo.png')),
+            label: '',
+          ),
+          BottomNavigationBarItem(
+            icon: ImageIcon(AssetImage('assets/icons_community.png')),
+            label: 'Community',
+          ),
+          BottomNavigationBarItem(
+            icon: ImageIcon(AssetImage('assets/icons_profil.png')),
+            label: 'Profil',
+          ),
         ],
       ),
 
@@ -418,10 +434,39 @@ class _HomePageState extends State<HomePage> {
         ),
         child: FloatingActionButton(
           backgroundColor: Colors.blue.shade700,
-          child: const Icon(Icons.chat_bubble_outline, color: Colors.white),
+          elevation: 0, // Menghilangkan shadow default
           onPressed: () {
-            Navigator.pushNamed(context, '/chat_page');
+            // Gunakan try-catch untuk menangkap error navigasi
+            try {
+              print("Navigating to chat page");
+              Navigator.pushNamed(context, '/chat');
+            } catch (e) {
+              print("Navigation error: $e");
+              // Fallback jika route tidak ditemukan
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ChatPage()),
+              );
+            }
           },
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Chat bubble icon sebagai background
+              // Logo di depan chat bubble
+              Positioned(
+                child: Image.asset(
+                  'assets/logo.png',
+                  width: 30,
+                  height: 30,
+                  errorBuilder: (context, error, stackTrace) {
+                    print("Error loading logo: $error");
+                    return const SizedBox(); // Return empty widget if logo fails to load
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,

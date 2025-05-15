@@ -26,7 +26,7 @@ class BottomNav extends StatelessWidget {
             IconButton(
               onPressed: () => onTap(0),
               icon: Image.asset(
-                'assets/icons/icons_home.png',
+                'assets/icons_home.png',
                 color: currentIndex == 0 ? Colors.deepPurple : Colors.grey,
                 height: 24,
               ),
@@ -34,7 +34,7 @@ class BottomNav extends StatelessWidget {
             IconButton(
               onPressed: () => onTap(1),
               icon: Image.asset(
-                'assets/icons/icons_note.png',
+                'assets/icons_note.png',
                 color: currentIndex == 1 ? Colors.deepPurple : Colors.grey,
                 height: 24,
               ),
@@ -43,7 +43,7 @@ class BottomNav extends StatelessWidget {
             IconButton(
               onPressed: () => onTap(3),
               icon: Image.asset(
-                'assets/icons/icons_community.png',
+                'assets/icons_community.png',
                 color: currentIndex == 3 ? Colors.deepPurple : Colors.grey,
                 height: 24,
               ),
@@ -51,7 +51,7 @@ class BottomNav extends StatelessWidget {
             IconButton(
               onPressed: () => onTap(4),
               icon: Image.asset(
-                'assets/icons/icons_profile.png',
+                'assets/icons_profile.png',
                 color: currentIndex == 4 ? Colors.deepPurple : Colors.grey,
                 height: 24,
               ),
@@ -64,7 +64,7 @@ class BottomNav extends StatelessWidget {
         elevation: 4,
         onPressed: onLogoTap,
         child: Image.asset(
-          'assets/icons/logo.png', // Logo Mentaly dari assets
+          'assets/logo.png', // Logo Mentaly dari assets
           height: 32,
           width: 32,
         ),
