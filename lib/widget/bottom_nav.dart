@@ -5,18 +5,20 @@ class BottomNav extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
   final VoidCallback onLogoTap;
+  final Widget body;
 
   const BottomNav({
     Key? key,
     required this.currentIndex,
     required this.onTap,
     required this.onLogoTap,
+    required this.body,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(child: Text('Content Goes Here')),
+      body: body, // tampilkan konten sesuai tab
       bottomNavigationBar: BottomAppBar(
         shape: const CircularNotchedRectangle(),
         notchMargin: 8.0,
@@ -63,11 +65,7 @@ class BottomNav extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 4,
         onPressed: onLogoTap,
-        child: Image.asset(
-          'assets/logo.png', // Logo Mentaly dari assets
-          height: 32,
-          width: 32,
-        ),
+        child: Image.asset('assets/logo.png', height: 32, width: 32),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );

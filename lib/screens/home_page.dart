@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mentaly/models/chat.dart';
-import '';
+import 'chatbot_page.dart';
 import 'package:mentaly/theme/app_theme.dart';
 import 'package:mentaly/widget/bottom_nav.dart';
 import 'package:mentaly/db/database.dart';
-import 'chat_page.dart';
 
 class HomePage extends StatefulWidget {
   final String username;
@@ -16,7 +14,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   String selectedMood = 'happy';
-  String moodText = 'Mood kamu stabil';
   int mentalHealthPercentage = 45; // Mental health percentage
 
   final List<Map<String, dynamic>> moods = [
@@ -46,10 +43,6 @@ class _HomePageState extends State<HomePage> {
     },
   ];
 
-  double _getPercentage() {
-    return mentalHealthPercentage / 100;
-  }
-
   // Doctor data
   final List<Doctor> doctors = [
     Doctor(
@@ -65,7 +58,7 @@ class _HomePageState extends State<HomePage> {
       imageUrl: 'assets/doctor2.png',
     ),
     Doctor(
-      name: 'Dr. Rizal Fauzi',
+      name: 'Dr. Ravelya Fenwick',
       role: 'Dokter Psikolog',
       rating: 95,
       imageUrl: 'assets/doctor3.png',
@@ -75,9 +68,10 @@ class _HomePageState extends State<HomePage> {
   // Article data
   final List<Article> articles = [
     Article(
-      title: 'Capek Itu Pilihan, Tapi Sakit Itu Bukan Pilihan',
+      title: 'Capek Itu Pilihan, Tapi Bunuh Diri Itu Bukan Pilihan',
       imageUrl: 'assets/article1.png',
-      description: 'Artikel mengenai kesehatan mental dan pentingnya istirahat',
+      description:
+          'Capek adalah pilihan yang bisa kadaluwarsa dengan istirahat, tapi bunuh diri itu tidak, yang menutup semua kemungkinan...',
     ),
   ];
 
@@ -93,10 +87,10 @@ class _HomePageState extends State<HomePage> {
         // Already on HomePage
         break;
       case 1:
-        Navigator.pushNamed(context, '/note_screen');
+        Navigator.pushNamed(context, '/note_page');
         break;
       case 2:
-        Navigator.pushNamed(context, '/chat_page');
+        // Center button - handled by FAB
         break;
       case 3:
         Navigator.pushNamed(context, '/community_screen');
@@ -134,70 +128,92 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.zero,
           children: [
-            // Status Bar (time) is handled by the system
-
             // Header with User Name and Notification
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Hai, Selamat Pagi!',
-                      style: TextStyle(fontSize: 14, color: Colors.black87),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    offset: Offset(0, 2),
+                    blurRadius: 4.0,
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Hai, Selamat Pagi!',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          Text(
+                            widget.username,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2C5D7C),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD9EFFC),
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        width: 46,
+                        height: 46,
+                        child: const Icon(
+                          Icons.notifications_outlined,
+                          color: Color(0xFF2C5D7C),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Search Bar
+                  Container(
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(25),
                     ),
-                    Text(
-                      widget.username,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2C5D7C),
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Apa yang Anda cari?',
+                        prefixIcon: const Icon(Icons.search, size: 20),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 5),
+                        hintStyle: TextStyle(
+                          color: Colors.grey.shade500,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
-                  ],
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFD9EFFC),
-                    borderRadius: BorderRadius.circular(25),
                   ),
-                  width: 50,
-                  height: 50,
-                  child: const Icon(
-                    Icons.notifications_outlined,
-                    color: Color(0xFF2C5D7C),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // Search Bar
-            Container(
-              height: 50,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(25),
-              ),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Apa yang Anda cari?',
-                  prefixIcon: const Icon(Icons.search),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 15),
-                  hintStyle: TextStyle(color: Colors.grey.shade500),
-                ),
+                ],
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
 
             // Mood Section
             Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: const Color(0xFFADE2F6),
@@ -208,10 +224,10 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   const Text(
                     'Bagaimana suasana hatimu saat ini?',
-                    style: TextStyle(fontSize: 16),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(height: 16),
-                  // Ubah bagian ini di dalam Row untuk mood selection
+                  // Mood selection with emojis
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children:
@@ -221,7 +237,6 @@ class _HomePageState extends State<HomePage> {
                             onTap: () {
                               setState(() {
                                 selectedMood = mood['label']!;
-                                moodText = mood['desc']!;
                                 mentalHealthPercentage =
                                     (mood['percentage'] * 100).toInt();
                               });
@@ -229,6 +244,7 @@ class _HomePageState extends State<HomePage> {
                             child: Container(
                               padding: const EdgeInsets.all(2),
                               decoration: BoxDecoration(
+                                shape: BoxShape.circle,
                                 border:
                                     isSelected
                                         ? Border.all(
@@ -236,20 +252,17 @@ class _HomePageState extends State<HomePage> {
                                           width: 2,
                                         )
                                         : null,
-                                borderRadius: BorderRadius.circular(30),
-                                color: Colors.amber.shade100,
                               ),
-                              // Ubah bagian ini dari mood['emoji']! menjadi Image.asset
                               child: Image.asset(
                                 mood['assets'],
-                                width: 40,
-                                height: 40,
+                                width: 46,
+                                height: 46,
                               ),
                             ),
                           );
                         }).toList(),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -260,44 +273,58 @@ class _HomePageState extends State<HomePage> {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 5),
+                      // Progress bar for mental health percentage
                       Stack(
                         children: [
                           Container(
-                            height: 10,
+                            height: 8,
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade300,
-                              borderRadius: BorderRadius.circular(5),
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(4),
                             ),
                           ),
                           Container(
-                            height: 10,
+                            height: 8,
                             width:
                                 MediaQuery.of(context).size.width *
-                                _getPercentage() *
-                                0.83,
+                                (mentalHealthPercentage / 100) *
+                                0.7,
                             decoration: BoxDecoration(
-                              color: Colors.blue.shade800,
-                              borderRadius: BorderRadius.circular(5),
+                              color: const Color(0xFF2C5D7C),
+                              borderRadius: BorderRadius.circular(4),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 5),
+                      // Percentage text
+                      Text(
+                        '$mentalHealthPercentage%',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2C5D7C),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Selesaikan quest ini untuk kami tahu terkait mentalmu',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade800,
+                          const Expanded(
+                            child: Text(
+                              'Selesaikan quest ini untuk kami tahu terkait mentalmu',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.black87,
+                              ),
                             ),
                           ),
                           ElevatedButton(
                             onPressed: _showQuestDialog,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue.shade800,
+                              backgroundColor: const Color(0xFF2C5D7C),
+                              foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
                               ),
@@ -305,10 +332,11 @@ class _HomePageState extends State<HomePage> {
                                 horizontal: 16,
                                 vertical: 6,
                               ),
+                              minimumSize: Size.zero,
                             ),
                             child: const Text(
                               'Selesaikan',
-                              style: TextStyle(color: Colors.white),
+                              style: TextStyle(fontSize: 12),
                             ),
                           ),
                         ],
@@ -319,153 +347,132 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
 
             // Doctor Section
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Dokter Terbaik',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C5D7C),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Dokter Terbaik',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2C5D7C),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  height: 200,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: doctors.length,
-                    itemBuilder: (context, index) {
-                      return DoctorCard(doctor: doctors[index]);
-                    },
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 180,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: doctors.length,
+                      itemBuilder: (context, index) {
+                        return DoctorCard(doctor: doctors[index]);
+                      },
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
 
             const SizedBox(height: 20),
 
             // Artikel dan Informasi Section
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Artikel dan Informasi',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C5D7C),
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    // Navigate to all articles screen
-                  },
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.blue.shade800,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Artikel dan Informasi',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2C5D7C),
                     ),
-                    shape: RoundedRectangleBorder(
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2C5D7C),
                       borderRadius: BorderRadius.circular(20),
                     ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    child: const Text(
+                      'Lihat Semua',
+                      style: TextStyle(color: Colors.white, fontSize: 12),
+                    ),
                   ),
-                  child: const Text(
-                    'Lihat Semua',
-                    style: TextStyle(color: Colors.white, fontSize: 12),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
 
             const SizedBox(height: 10),
 
             // Article card
             ArticleCard(article: articles[0]),
+
+            const SizedBox(height: 20),
           ],
         ),
       ),
 
       // Bottom Navigation
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
+        currentIndex: _selectedIndex == 2 ? 0 : _selectedIndex,
         onTap: _onBottomNavTapped,
         backgroundColor: Colors.white,
-        selectedItemColor: Colors.blue.shade700,
+        selectedItemColor: const Color(0xFF2C5D7C),
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
+        selectedFontSize: 12,
+        unselectedFontSize: 12,
         items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.note), label: 'Note'),
           BottomNavigationBarItem(
-            icon: ImageIcon(AssetImage('assets/icons_home.png')),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: ImageIcon(AssetImage('assets/icons_note.png')),
-            label: 'Note',
-          ),
-          BottomNavigationBarItem(
-            icon: ImageIcon(AssetImage('assets/logo.png')),
+            icon: SizedBox(width: 24), // Empty space for FAB
             label: '',
           ),
-          BottomNavigationBarItem(
-            icon: ImageIcon(AssetImage('assets/icons_community.png')),
-            label: 'Community',
-          ),
-          BottomNavigationBarItem(
-            icon: ImageIcon(AssetImage('assets/icons_profil.png')),
-            label: 'Profil',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Community'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
         ],
       ),
 
       // Floating action button in middle of bottom nav
       floatingActionButton: Container(
-        height: 60,
-        width: 60,
+        height: 56,
+        width: 56,
         decoration: BoxDecoration(
-          color: Colors.blue.shade700,
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: Colors.white, width: 4),
+          color: Colors.white,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 3),
         ),
         child: FloatingActionButton(
-          backgroundColor: Colors.blue.shade700,
-          elevation: 0, // Menghilangkan shadow default
+          backgroundColor: Colors.blue,
+          elevation: 0,
           onPressed: () {
-            // Gunakan try-catch untuk menangkap error navigasi
             try {
-              print("Navigating to chat page");
-              Navigator.pushNamed(context, '/chat');
+              Navigator.pushNamed(context, '/chatbot_page');
             } catch (e) {
-              print("Navigation error: $e");
-              // Fallback jika route tidak ditemukan
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const ChatPage()),
+                MaterialPageRoute(builder: (context) => const ChatbotPage()),
               );
             }
           },
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Chat bubble icon sebagai background
-              // Logo di depan chat bubble
-              Positioned(
-                child: Image.asset(
-                  'assets/logo.png',
-                  width: 30,
-                  height: 30,
-                  errorBuilder: (context, error, stackTrace) {
-                    print("Error loading logo: $error");
-                    return const SizedBox(); // Return empty widget if logo fails to load
-                  },
-                ),
-              ),
-            ],
+          child: Image.asset(
+            'assets/logo.png',
+            width: 30,
+            height: 30,
+            errorBuilder: (context, error, stackTrace) {
+              return const Icon(Icons.chat, color: Colors.white);
+            },
           ),
         ),
       ),
@@ -511,18 +518,11 @@ class DoctorCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(right: 8),
-      width: 160,
+      margin: const EdgeInsets.only(right: 10),
+      width: 150,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -533,25 +533,47 @@ class DoctorCard extends StatelessWidget {
               topLeft: Radius.circular(12),
               topRight: Radius.circular(12),
             ),
-            child: Image.asset(
-              doctor.imageUrl,
-              height: 120,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              // Fallback jika gambar tidak ditemukan
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  height: 120,
+            child: Stack(
+              children: [
+                Image.asset(
+                  doctor.imageUrl,
+                  height: 110,
                   width: double.infinity,
-                  color: Colors.grey.shade300,
-                  child: const Icon(Icons.person, size: 50, color: Colors.grey),
-                );
-              },
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: 110,
+                      width: double.infinity,
+                      color: Colors.grey.shade200,
+                      child: const Icon(
+                        Icons.person,
+                        size: 40,
+                        color: Colors.grey,
+                      ),
+                    );
+                  },
+                ),
+                // Warning banner at bottom of image
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    color: Colors.amber,
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: const Text(
+                      'BOTTOM OVERFLOWED BY 4.0 PIXELS',
+                      style: TextStyle(fontSize: 8, color: Colors.black),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           // Doctor information
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -562,6 +584,8 @@ class DoctorCard extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF2C5D7C),
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   doctor.role,
@@ -608,15 +632,10 @@ class ArticleCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Article image (left)
           ClipRRect(
@@ -627,16 +646,16 @@ class ArticleCard extends StatelessWidget {
             child: Image.asset(
               article.imageUrl,
               height: 120,
-              width: 120,
+              width: 80,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 return Container(
                   height: 120,
-                  width: 120,
-                  color: Colors.grey.shade300,
+                  width: 80,
+                  color: Colors.grey.shade200,
                   child: const Icon(
                     Icons.article,
-                    size: 50,
+                    size: 40,
                     color: Colors.grey,
                   ),
                 );
@@ -662,28 +681,19 @@ class ArticleCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    article.description,
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                    maxLines: 2,
+                    'Capek adalah pilihan yang bisa kadaluwarsa dengan istirahat, tapi bunuh diri itu tidak, yang menutup semua kemungkinan...',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
-                  // Chat assistant image
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade200,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Image.asset(
-                        'assets/cry.png',
-                        width: 24,
-                        height: 24,
-                        fit: BoxFit.contain,
-                      ),
+                  const SizedBox(height: 6),
+                  // Read more link
+                  Text(
+                    'Lihat selengkapnya',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.blue.shade700,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
