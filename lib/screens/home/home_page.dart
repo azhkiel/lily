@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'chatbot_page.dart';
+import 'chatbot/chatbot_page.dart';
 import 'package:mentaly/theme/app_theme.dart';
 import 'package:mentaly/widget/bottom_nav.dart';
 import 'package:mentaly/db/database.dart';

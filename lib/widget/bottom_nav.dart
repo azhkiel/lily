@@ -3,7 +3,7 @@ import 'package:mentaly/theme/app_theme.dart';
 
 class BottomNav extends StatelessWidget {
   final int currentIndex;
-  final Function(int) onTap;
+  final ValueChanged<int> onTap;
   final VoidCallback onLogoTap;
   final Widget body;
 
@@ -15,59 +15,75 @@ class BottomNav extends StatelessWidget {
     required this.body,
   }) : super(key: key);
 
+  static const _iconSize = 24.0;
+  static const _fabSize = 32.0;
+  static const _notchMargin = 8.0;
+
+  static const List<_NavItem> _navItems = [
+    _NavItem(asset: 'assets/icons_home.png', index: 0, tooltip: 'Home'),
+    _NavItem(asset: 'assets/icons_note.png', index: 1, tooltip: 'Notes'),
+    _NavItem(asset: 'assets/icons_community.png', index: 3, tooltip: 'Community'),
+    _NavItem(asset: 'assets/icons_profile.png', index: 4, tooltip: 'Profile'),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: body, // tampilkan konten sesuai tab
+      body: SafeArea(child: body),
       bottomNavigationBar: BottomAppBar(
         shape: const CircularNotchedRectangle(),
-        notchMargin: 8.0,
+        notchMargin: _notchMargin,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            IconButton(
-              onPressed: () => onTap(0),
-              icon: Image.asset(
-                'assets/icons_home.png',
-                color: currentIndex == 0 ? Colors.deepPurple : Colors.grey,
-                height: 24,
-              ),
-            ),
-            IconButton(
-              onPressed: () => onTap(1),
-              icon: Image.asset(
-                'assets/icons_note.png',
-                color: currentIndex == 1 ? Colors.deepPurple : Colors.grey,
-                height: 24,
-              ),
-            ),
-            const SizedBox(width: 40), // Space for center FAB
-            IconButton(
-              onPressed: () => onTap(3),
-              icon: Image.asset(
-                'assets/icons_community.png',
-                color: currentIndex == 3 ? Colors.deepPurple : Colors.grey,
-                height: 24,
-              ),
-            ),
-            IconButton(
-              onPressed: () => onTap(4),
-              icon: Image.asset(
-                'assets/icons_profile.png',
-                color: currentIndex == 4 ? Colors.deepPurple : Colors.grey,
-                height: 24,
-              ),
-            ),
+            ..._navItems.take(2).map(_buildNavIcon).toList(),
+            const SizedBox(width: 40), // ruang FAB
+            ..._navItems.skip(2).map(_buildNavIcon).toList(),
           ],
         ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.white,
         elevation: 4,
         onPressed: onLogoTap,
-        child: Image.asset('assets/logo.png', height: 32, width: 32),
+        child: Image.asset(
+          'assets/logo.png',
+          height: _fabSize,
+          width: _fabSize,
+          errorBuilder: (_, __, ___) => const Icon(Icons.error),
+        ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
+
+  Widget _buildNavIcon(_NavItem item) {
+    final isSelected = currentIndex == item.index;
+    return Expanded(
+      child: Tooltip(
+        message: item.tooltip,
+        child: IconButton(
+          onPressed: () => onTap(item.index),
+          icon: Image.asset(
+            item.asset,
+            color: isSelected ? Colors.deepPurple : Colors.grey,
+            height: _iconSize,
+            errorBuilder: (_, __, ___) => const Icon(Icons.error),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavItem {
+  final String asset;
+  final int index;
+  final String tooltip;
+
+  const _NavItem({
+    required this.asset,
+    required this.index,
+    required this.tooltip,
+  });
 }

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
-import '../db/database.dart';
-import 'home_page.dart';
+import '../../db/database.dart';
+import '../home/home_page.dart';
 import 'register_page.dart';
-import 'database_viewer.dart';
+import '../database_viewer.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);

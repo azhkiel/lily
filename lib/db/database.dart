@@ -1,43 +1,15 @@
 import 'package:sqflite/sqflite.dart';
-import 'package:sqflite/sqflite.dart' as sql;
-import 'package:sqflite/sqlite_api.dart';
 import 'package:path/path.dart';
+
 import '../models/chat.dart';
+import '../models/note.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
-  final int _currentVersion = 2; // Versi database saat ini
+  final int _currentVersion = 2;
 
   DatabaseHelper._init();
-  Future<int> update(
-    String table,
-    Map<String, dynamic> values, {
-    String? where,
-    List<dynamic>? whereArgs,
-  }) async {
-    final db = await instance.database;
-    return await db.update(
-      table,
-      values,
-      where: where,
-      whereArgs: whereArgs,
-    );
-  }
-
-  // Tambahkan method delete untuk melengkapi
-  Future<int> delete(
-    String table, {
-    String? where,
-    List<dynamic>? whereArgs,
-  }) async {
-    final db = await instance.database;
-    return await db.delete(
-      table,
-      where: where,
-      whereArgs: whereArgs,
-    );
-  }
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -57,8 +29,8 @@ class DatabaseHelper {
     );
   }
 
+  // Membuat tabel users, chats, notes dengan foreign key dan constraints
   Future _createDB(Database db, int version) async {
-    // Buat tabel users terlebih dahulu karena chats memiliki foreign key ke users
     await db.execute('''
       CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -67,7 +39,6 @@ class DatabaseHelper {
       )
     ''');
 
-    // Buat tabel chats
     await db.execute('''
       CREATE TABLE chats (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -80,31 +51,39 @@ class DatabaseHelper {
         FOREIGN KEY (receiver_id) REFERENCES users (id) ON DELETE CASCADE
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE notes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    ''');
   }
 
+  // Upgrade DB untuk menambahkan kolom is_ai di tabel chats versi 2
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      // Migrasi dari versi 1 ke 2 - tambahkan kolom is_ai jika belum ada
       try {
         await db.execute('ALTER TABLE chats ADD COLUMN is_ai INTEGER DEFAULT 0');
       } catch (e) {
-        // Kolom mungkin sudah ada, tidak perlu dilakukan apa-apa
-        print('Column is_ai might already exist: $e');
+        print('Kolom is_ai mungkin sudah ada: $e');
       }
     }
-    // Tambahkan migrasi versi lainnya di sini jika diperlukan
+    // Tambahkan migrasi versi berikutnya di sini jika diperlukan
   }
 
-  // User operations
+  // USER OPERATIONS
   Future<int> createUser(String username, String password) async {
     final db = await instance.database;
     try {
       return await db.insert(
         'users',
-        {
-          'username': username,
-          'password': password,
-        },
+        {'username': username, 'password': password},
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } catch (e) {
@@ -129,7 +108,7 @@ class DatabaseHelper {
     }
   }
 
-  // Chat operations
+  // CHAT OPERATIONS
   Future<int> insertChat(Chat chat) async {
     final db = await instance.database;
     try {
@@ -144,23 +123,120 @@ class DatabaseHelper {
     }
   }
 
-  Future<List<Chat>> getChats(int userId, int otherUserId) async {
+  /// Ambil chat antara dua user beserta username pengirim dan penerima
+  Future<List<Map<String, dynamic>>> getChatsWithUsernames(int userId, int otherUserId) async {
     final db = await instance.database;
     try {
-      final result = await db.query(
-        'chats',
-        where: '(sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)',
-        whereArgs: [userId, otherUserId, otherUserId, userId],
-        orderBy: 'timestamp ASC', // ASC untuk urutan dari yang terlama
-      );
-      return result.map((json) => Chat.fromMap(json)).toList();
+      final result = await db.rawQuery('''
+        SELECT c.id, c.message, c.timestamp, c.is_ai,
+               sender.id AS sender_id, sender.username AS sender_username,
+               receiver.id AS receiver_id, receiver.username AS receiver_username
+        FROM chats c
+        JOIN users sender ON c.sender_id = sender.id
+        JOIN users receiver ON c.receiver_id = receiver.id
+        WHERE (c.sender_id = ? AND c.receiver_id = ?) OR (c.sender_id = ? AND c.receiver_id = ?)
+        ORDER BY c.timestamp ASC
+      ''', [userId, otherUserId, otherUserId, userId]);
+      return result;
     } catch (e) {
-      print('Error getting chats: $e');
+      print('Error getting chats with usernames: $e');
       return [];
     }
   }
 
-  // Database inspection methods
+  // NOTES OPERATIONS
+  Future<int> insertNote(Note note) async {
+    final db = await instance.database;
+    try {
+      return await db.insert(
+        'notes',
+        note.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } catch (e) {
+      print('Error inserting note: $e');
+      rethrow;
+    }
+  }
+
+  /// Ambil semua notes beserta username usernya berdasarkan userId
+  Future<List<Map<String, dynamic>>> getNotesWithUser(int userId) async {
+    final db = await instance.database;
+    try {
+      final result = await db.rawQuery('''
+        SELECT n.id, n.title, n.content, n.created_at, n.updated_at,
+               u.id AS user_id, u.username
+        FROM notes n
+        JOIN users u ON n.user_id = u.id
+        WHERE n.user_id = ?
+        ORDER BY n.created_at DESC
+      ''', [userId]);
+      return result;
+    } catch (e) {
+      print('Error getting notes with user: $e');
+      return [];
+    }
+  }
+
+  Future<int> updateNote(Note note) async {
+    final db = await instance.database;
+    try {
+      return await db.update(
+        'notes',
+        note.toMap(),
+        where: 'id = ?',
+        whereArgs: [note.id],
+      );
+    } catch (e) {
+      print('Error updating note: $e');
+      rethrow;
+    }
+  }
+
+  Future<int> deleteNote(int noteId) async {
+    final db = await instance.database;
+    try {
+      return await db.delete(
+        'notes',
+        where: 'id = ?',
+        whereArgs: [noteId],
+      );
+    } catch (e) {
+      print('Error deleting note: $e');
+      rethrow;
+    }
+  }
+
+  // GENERIC UPDATE & DELETE
+  Future<int> update(
+    String table,
+    Map<String, dynamic> values, {
+    String? where,
+    List<dynamic>? whereArgs,
+  }) async {
+    final db = await instance.database;
+    return await db.update(
+      table,
+      values,
+      where: where,
+      whereArgs: whereArgs,
+    );
+  }
+
+  Future<int> delete(
+    String table, {
+    String? where,
+    List<dynamic>? whereArgs,
+  }) async {
+    final db = await instance.database;
+    return await db.delete(
+      table,
+      where: where,
+      whereArgs: whereArgs,
+    );
+  }
+
+  // DB INSPECTION
   Future<List<String>> getTableNames() async {
     final db = await instance.database;
     try {
@@ -201,6 +277,7 @@ class DatabaseHelper {
     }
   }
 
+  // Close & Delete DB
   Future<void> close() async {
     final db = await instance.database;
     try {
@@ -211,18 +288,16 @@ class DatabaseHelper {
     }
   }
 
-  // Method untuk development/debugging
   Future<void> deleteDatabase() async {
-  final dbPath = await getDatabasesPath();
-  final path = join(dbPath, 'chat_app.db');
-  try {
-    // Gunakan fungsi deleteDatabase dari package sqflite
-    await databaseFactory.deleteDatabase(path);
-    _database = null;
-    print('Database deleted successfully');
-  } catch (e) {
-    print('Error deleting database: $e');
-    rethrow;
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, 'chat_app.db');
+    try {
+      await databaseFactory.deleteDatabase(path);
+      _database = null;
+      print('Database deleted successfully');
+    } catch (e) {
+      print('Error deleting database: $e');
+      rethrow;
+    }
   }
-}
 }
