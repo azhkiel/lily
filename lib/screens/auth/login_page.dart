@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
-import '../../db/database.dart';
-import '../home/home_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mentaly/screens/home/home_page.dart';
 import 'register_page.dart';
 import '../database_viewer.dart';
+import 'package:mentaly/db/database.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -21,12 +21,13 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
-    // Penting untuk membersihkan controller saat widget dihapus
+    // Clean up controllers when the widget is disposed
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
+  // Function to handle login
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -36,25 +37,32 @@ class _LoginPageState extends State<LoginPage> {
       final username = _usernameController.text.trim();
       final password = _passwordController.text.trim();
 
-      // Tambahkan log untuk debugging
       print('Attempting login with username: $username');
 
       final user = await DatabaseHelper.instance.getUser(username);
       print('User found: ${user != null}');
 
       if (user == null || user['password'] != password) {
-        if (!mounted) return; // Cek apakah widget masih terpasang
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Invalid username or password')),
         );
       } else {
         print('Login successful, navigating to HomePage');
-        if (!mounted) return; // Cek apakah widget masih terpasang
+        if (!mounted) return;
 
-        // Gunakan pushAndRemoveUntil untuk membersihkan stack navigasi
+        // Get userId after successful validation
+        final userId = user['id']; // Get userId from the query result
+
+        // Save user session data
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('username', username);
+        await prefs.setInt('userId', userId);
+
+        // Navigate to HomePage
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => HomePage(username: username)),
+          MaterialPageRoute(builder: (context) => HomePage(username: username, userId: userId)),
           (route) => false,
         );
       }
@@ -140,11 +148,9 @@ class _LoginPageState extends State<LoginPage> {
                     filled: true,
                     fillColor: Colors.grey[100],
                   ),
-                  validator:
-                      (value) =>
-                          value?.isEmpty ?? true
-                              ? 'Username is required'
-                              : null,
+                  validator: (value) => value?.isEmpty ?? true
+                      ? 'Username is required'
+                      : null,
                 ),
                 const SizedBox(height: 20),
 
@@ -156,9 +162,7 @@ class _LoginPageState extends State<LoginPage> {
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
+                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
                       ),
                       onPressed: () {
                         setState(() {
@@ -173,11 +177,9 @@ class _LoginPageState extends State<LoginPage> {
                     fillColor: Colors.grey[50],
                   ),
                   obscureText: _obscurePassword,
-                  validator:
-                      (value) =>
-                          value?.isEmpty ?? true
-                              ? 'Password is required'
-                              : null,
+                  validator: (value) => value?.isEmpty ?? true
+                      ? 'Password is required'
+                      : null,
                 ),
                 const SizedBox(height: 24),
 
@@ -185,22 +187,21 @@ class _LoginPageState extends State<LoginPage> {
                 SizedBox(
                   width: double.infinity,
                   height: 50,
-                  child:
-                      _isLoading
-                          ? const Center(child: CircularProgressIndicator())
-                          : ElevatedButton(
-                            onPressed: _login,
-                            style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : ElevatedButton(
+                          onPressed: _login,
+                          style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                            child: const Text(
-                              'LOGIN',
-                              style: TextStyle(fontSize: 16),
-                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
+                          child: const Text(
+                            'LOGIN',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        ),
                 ),
                 const SizedBox(height: 20),
 

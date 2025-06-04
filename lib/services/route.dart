@@ -57,10 +57,14 @@ class MyApp extends StatelessWidget {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginPage(),
         '/register': (context) => const RegisterPage(),
-        '/home': (context) => const HomePage(username: ''),
+        // Menambahkan username dan userId ke HomePage
+        '/home': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ?? {};
+          final username = args?['username'] as String? ?? '';
+          final userId = args?['userId'] as int? ?? 0;
+          return HomePage(username: username, userId: userId);
+        },
         '/premium': (context) => const PremiumScreen(username: ''),
-        // Ubah route note_page untuk menunggu argumen userId
-        // Disarankan untuk handle route ini di onGenerateRoute agar bisa dinamis
       },
       onGenerateRoute: (settings) {
         print('Generating route for: ${settings.name}');

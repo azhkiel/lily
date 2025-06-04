@@ -20,9 +20,8 @@ class _NotepadListScreenState extends State<NotepadListScreen> {
     _loadNotes();
   }
 
+  // Function to load notes from the database
   void _loadNotes() {
-    // Gunakan getNotesWithUser untuk dapat join user info,
-    // tapi parse hasilnya jadi List<Note>
     _notesFuture = DatabaseHelper.instance
         .getNotesWithUser(widget.userId)
         .then((maps) => maps.map((map) {
@@ -37,6 +36,13 @@ class _NotepadListScreenState extends State<NotepadListScreen> {
             }).toList());
   }
 
+  // Function to refresh the list after add or delete action
+  void _refreshNotes() {
+    setState(() {
+      _loadNotes();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,16 +52,7 @@ class _NotepadListScreenState extends State<NotepadListScreen> {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AddEditNoteScreen(userId: widget.userId),
-                ),
-              ).then((_) {
-                setState(() {
-                  _loadNotes();
-                });
-              });
+              _navigateToAddEditNoteScreen();
             },
           ),
         ],
@@ -75,41 +72,45 @@ class _NotepadListScreenState extends State<NotepadListScreen> {
               itemCount: notes.length,
               itemBuilder: (context, index) {
                 final note = notes[index];
-                return ListTile(
-                  title: Text(note.title),
-                  subtitle: Text(
-                    note.content,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AddEditNoteScreen(
-                          userId: widget.userId,
-                          note: note,
-                        ),
-                      ),
-                    ).then((_) {
-                      setState(() {
-                        _loadNotes();
-                      });
-                    });
-                  },
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () async {
-                      await DatabaseHelper.instance.deleteNote(note.id!);
-                      setState(() {
-                        _loadNotes();
-                      });
-                    },
-                  ),
-                );
+                return _buildNoteListTile(note);
               },
             );
           }
+        },
+      ),
+    );
+  }
+
+  // Function to navigate to Add or Edit Note screen
+  void _navigateToAddEditNoteScreen({Note? note}) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddEditNoteScreen(
+          userId: widget.userId,
+          note: note,
+        ),
+      ),
+    ).then((_) => _refreshNotes());
+  }
+
+  // Function to build note list tile
+  Widget _buildNoteListTile(Note note) {
+    return ListTile(
+      title: Text(note.title),
+      subtitle: Text(
+        note.content,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+      onTap: () {
+        _navigateToAddEditNoteScreen(note: note);
+      },
+      trailing: IconButton(
+        icon: const Icon(Icons.delete),
+        onPressed: () async {
+          await DatabaseHelper.instance.deleteNote(note.id!);
+          _refreshNotes();
         },
       ),
     );
@@ -150,6 +151,7 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
     super.dispose();
   }
 
+  // Function to save the note
   Future<void> _saveNote() async {
     final title = _titleController.text.trim();
     final content = _contentController.text.trim();
