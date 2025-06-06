@@ -5,7 +5,7 @@ import 'package:mentaly/screens/home/note/note_page.dart';
 import 'package:mentaly/screens/splash_screen.dart';
 import 'package:mentaly/screens/auth/login_page.dart';
 import 'package:mentaly/screens/home/chatbot/chatbot_page.dart';
-import 'package:mentaly/screens/home/profile_screen.dart';
+import 'package:mentaly/screens/home/profile/profile_page.dart';
 import 'package:mentaly/screens/auth/register_page.dart';
 import 'package:mentaly/screens/home/chatbot/premium_screen.dart';
 import 'package:mentaly/theme/app_theme.dart';

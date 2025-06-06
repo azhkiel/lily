@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mentaly/screens/home/note/note_page.dart';
+import 'package:mentaly/screens/home/profile/profile_page.dart';
 import 'chatbot/chatbot_page.dart';
-import 'note/note_page.dart';
-import '../splash_screen.dart'; // Import SplashScreen
+import 'package:mentaly/widget/bottomNavBar.dart';
 
 class HomePage extends StatefulWidget {
   final String username;
   final int userId;
+
   const HomePage({Key? key, required this.username, required this.userId}) : super(key: key);
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
   String selectedMood = 'happy';
-  int mentalHealthPercentage = 45; // Mental health percentage
+  int mentalHealthPercentage = 45;
 
   final List<Map<String, dynamic>> moods = [
     {'label': 'angry', 'assets': 'assets/angry.png', 'percentage': 0.3},
@@ -24,37 +25,7 @@ class _HomePageState extends State<HomePage> {
     {'label': 'cry', 'assets': 'assets/cry.png', 'percentage': 0.2},
   ];
 
-  int _selectedIndex = 0; // Set to 0 (Home)
-
-  void _onBottomNavTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-
-    if (index == 1) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => NotepadListScreen(userId: widget.userId), // Pass userId to NotepadListScreen
-        ),
-      );
-    } else if (index == 3) {
-      Navigator.pushNamed(context, '/community_screen');
-    } else if (index == 4) {
-      Navigator.pushNamed(context, '/profile_screen');
-    }
-  }
-
-  // Function to log out and clear session
-  Future<void> _logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('username'); // Remove saved username
-    await prefs.remove('userId'); // Remove saved userId
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const SplashScreen()), // Navigate back to splash screen
-    );
-  }
+  int _selectedIndex = 0;
 
   void _showQuestDialog() {
     showDialog(
@@ -78,17 +49,40 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _onBottomNavTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    if (index == 1) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => NotepadListScreen(userId: widget.userId), // Pass userId to NotepadListScreen
+        ),
+      );
+    } else if (index == 3) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => NotepadListScreen(userId: widget.userId), // Pass userId to NotepadListScreen
+        ),
+      );
+    } else if (index == 4) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ProfileScreen(), // Navigate to ProfileScreen
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.exit_to_app),
-            onPressed: _logout, // Trigger logout
-          ),
-        ],
       ),
       body: SafeArea(
         child: ListView(
@@ -103,31 +97,22 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-
       // Bottom Navigation
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex == 2 ? 0 : _selectedIndex,
-        onTap: _onBottomNavTapped,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF2C5D7C),
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        selectedFontSize: 12,
-        unselectedFontSize: 12,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.note), label: 'Note'),
-          BottomNavigationBarItem(icon: SizedBox(width: 24), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Community'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
-        ],
+      bottomNavigationBar: BottomNavBar(
+        selectedIndex: _selectedIndex,
+        onItemTapped: _onBottomNavTapped,
+        userId: widget.userId, // Pass userId to BottomNavBar
       ),
-
       // Floating action button in the middle of bottom nav
       floatingActionButton: FloatingActionButton(
         onPressed: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const ChatbotPage()), // Direct push to ChatbotPage
+          MaterialPageRoute(
+            builder: (context) => ChatbotPage(
+              username: widget.username, // Pass username
+              userId: widget.userId,     // Pass userId - FIXED!
+            ),
+          ),
         ),
         backgroundColor: Colors.blue,
         elevation: 0,

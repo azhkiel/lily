@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../db/database.dart';
+import 'package:mentaly/db/database.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({Key? key}) : super(key: key);

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mentaly/screens/home/home_page.dart';
 import 'register_page.dart';
-import '../database_viewer.dart';
 import 'package:mentaly/db/database.dart';
+import 'package:mentaly/screens/databaseScreen.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -18,6 +18,8 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  bool _showSuccessDialog = false;
+  bool _showFailureDialog = false;
 
   @override
   void dispose() {
@@ -43,14 +45,27 @@ class _LoginPageState extends State<LoginPage> {
       print('User found: ${user != null}');
 
       if (user == null || user['password'] != password) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invalid username or password')),
-        );
+        // Show failure popup with animation
+        setState(() {
+          _showFailureDialog = true;
+        });
+        Future.delayed(const Duration(seconds: 2), () {
+          setState(() {
+            _showFailureDialog = false;
+          });
+        });
       } else {
-        print('Login successful, navigating to HomePage');
-        if (!mounted) return;
+        // Show success popup with animation
+        setState(() {
+          _showSuccessDialog = true;
+        });
+        Future.delayed(const Duration(seconds: 2), () {
+          setState(() {
+            _showSuccessDialog = false;
+          });
+        });
 
+        print('Login successful, navigating to HomePage');
         // Get userId after successful validation
         final userId = user['id']; // Get userId from the query result
 
@@ -91,7 +106,7 @@ class _LoginPageState extends State<LoginPage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const DatabaseViewer()),
+                MaterialPageRoute(builder: (context) => DatabaseManagementScreen()),
               );
             },
             tooltip: 'View Database',
@@ -231,6 +246,38 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       ),
+      // Pop-up dialog for login success
+      floatingActionButton: _showSuccessDialog
+          ? AnimatedOpacity(
+              opacity: _showSuccessDialog ? 1.0 : 0.0,
+              duration: const Duration(seconds: 1),
+              child: Center(
+                child: Container(
+                  color: Colors.green,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  child: const Text(
+                    'Login Successful!',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ),
+              ),
+            )
+          : _showFailureDialog
+              ? AnimatedOpacity(
+                  opacity: _showFailureDialog ? 1.0 : 0.0,
+                  duration: const Duration(seconds: 1),
+                  child: Center(
+                    child: Container(
+                      color: Colors.red,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      child: const Text(
+                        'Invalid Username or Password',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink(), // No dialog shown if login is still in progress
     );
   }
 }

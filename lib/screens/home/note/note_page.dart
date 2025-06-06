@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../db/database.dart';
-import '../../../models/note.dart';
+import 'package:mentaly/db/database.dart';
+import 'package:mentaly/models/note.dart';
 
 class NotepadListScreen extends StatefulWidget {
   final int userId;
