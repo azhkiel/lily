@@ -12,7 +12,7 @@ class LoginPage extends StatefulWidget {
   _LoginPageState createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -20,16 +20,65 @@ class _LoginPageState extends State<LoginPage> {
   bool _obscurePassword = true;
   bool _showSuccessDialog = false;
   bool _showFailureDialog = false;
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeOutBack,
+      ),
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeIn,
+      ),
+    );
+  }
 
   @override
   void dispose() {
-    // Clean up controllers when the widget is disposed
+    _animationController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  // Function to handle login
+  Future<void> _showAnimatedDialog(bool isSuccess) async {
+    setState(() {
+      if (isSuccess) {
+        _showSuccessDialog = true;
+      } else {
+        _showFailureDialog = true;
+      }
+    });
+    
+    _animationController.forward();
+    
+    await Future.delayed(const Duration(seconds: 2));
+    
+    _animationController.reverse().then((_) {
+      if (mounted) {
+        setState(() {
+          if (isSuccess) {
+            _showSuccessDialog = false;
+          } else {
+            _showFailureDialog = false;
+          }
+        });
+      }
+    });
+  }
+
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -45,36 +94,17 @@ class _LoginPageState extends State<LoginPage> {
       print('User found: ${user != null}');
 
       if (user == null || user['password'] != password) {
-        // Show failure popup with animation
-        setState(() {
-          _showFailureDialog = true;
-        });
-        Future.delayed(const Duration(seconds: 2), () {
-          setState(() {
-            _showFailureDialog = false;
-          });
-        });
+        await _showAnimatedDialog(false);
       } else {
-        // Show success popup with animation
-        setState(() {
-          _showSuccessDialog = true;
-        });
-        Future.delayed(const Duration(seconds: 2), () {
-          setState(() {
-            _showSuccessDialog = false;
-          });
-        });
+        await _showAnimatedDialog(true);
 
         print('Login successful, navigating to HomePage');
-        // Get userId after successful validation
-        final userId = user['id']; // Get userId from the query result
+        final userId = user['id'];
 
-        // Save user session data
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('username', username);
         await prefs.setInt('userId', userId);
 
-        // Navigate to HomePage
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => HomePage(username: username, userId: userId)),
@@ -113,171 +143,214 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Logo Section
-                Container(
-                  margin: const EdgeInsets.only(bottom: 40, top: 20),
-                  child: Image.asset(
-                    'assets/logo.png', // Replace with your logo path
-                    height: 150,
-                    width: 150,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      print('Error loading logo: $error');
-                      return const Icon(Icons.image_not_supported, size: 150);
-                    },
-                  ),
-                ),
-
-                // Welcome Text
-                Text(
-                  'Welcome Back',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).primaryColor,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Please login to continue',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 32),
-
-                // Username Field
-                TextFormField(
-                  controller: _usernameController,
-                  decoration: InputDecoration(
-                    labelText: 'Username',
-                    prefixIcon: const Icon(Icons.person),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey[100],
-                  ),
-                  validator: (value) => value?.isEmpty ?? true
-                      ? 'Username is required'
-                      : null,
-                ),
-                const SizedBox(height: 20),
-
-                // Password Field
-                TextFormField(
-                  controller: _passwordController,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey[50],
-                  ),
-                  obscureText: _obscurePassword,
-                  validator: (value) => value?.isEmpty ?? true
-                      ? 'Password is required'
-                      : null,
-                ),
-                const SizedBox(height: 24),
-
-                // Login Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : ElevatedButton(
-                          onPressed: _login,
-                          style: ElevatedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          child: const Text(
-                            'LOGIN',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                        ),
-                ),
-                const SizedBox(height: 20),
-
-                // Register Link
-                Row(
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text("Don't have an account?"),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const RegisterPage(),
-                          ),
-                        );
-                      },
-                      child: const Text(
-                        'Sign Up',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                    // Logo Section
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 40, top: 20),
+                      child: Image.asset(
+                        'assets/logo.png',
+                        height: 150,
+                        width: 150,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          print('Error loading logo: $error');
+                          return const Icon(Icons.image_not_supported, size: 150);
+                        },
                       ),
+                    ),
+
+                    // Welcome Text
+                    Text(
+                      'Welcome Back',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Please login to continue',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Username Field
+                    TextFormField(
+                      controller: _usernameController,
+                      decoration: InputDecoration(
+                        labelText: 'Username',
+                        prefixIcon: const Icon(Icons.person),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[100],
+                      ),
+                      validator: (value) => value?.isEmpty ?? true
+                          ? 'Username is required'
+                          : null,
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Password Field
+                    TextFormField(
+                      controller: _passwordController,
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                      ),
+                      obscureText: _obscurePassword,
+                      validator: (value) => value?.isEmpty ?? true
+                          ? 'Password is required'
+                          : null,
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Login Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : ElevatedButton(
+                              onPressed: _login,
+                              style: ElevatedButton.styleFrom(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                              child: const Text(
+                                'LOGIN',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Register Link
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text("Don't have an account?"),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const RegisterPage(),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            'Sign Up',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
-      // Pop-up dialog for login success
-      floatingActionButton: _showSuccessDialog
-          ? AnimatedOpacity(
-              opacity: _showSuccessDialog ? 1.0 : 0.0,
-              duration: const Duration(seconds: 1),
-              child: Center(
-                child: Container(
-                  color: Colors.green,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  child: const Text(
-                    'Login Successful!',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+
+          // Success Popup
+          if (_showSuccessDialog)
+            Center(
+              child: ScaleTransition(
+                scale: _scaleAnimation,
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: _buildPopupDialog(
+                    icon: Icons.check_circle,
+                    color: Colors.green,
+                    message: 'Login Successful!',
                   ),
                 ),
               ),
-            )
-          : _showFailureDialog
-              ? AnimatedOpacity(
-                  opacity: _showFailureDialog ? 1.0 : 0.0,
-                  duration: const Duration(seconds: 1),
-                  child: Center(
-                    child: Container(
-                      color: Colors.red,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      child: const Text(
-                        'Invalid Username or Password',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ),
-                    ),
+            ),
+
+          // Failure Popup
+          if (_showFailureDialog)
+            Center(
+              child: ScaleTransition(
+                scale: _scaleAnimation,
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: _buildPopupDialog(
+                    icon: Icons.error_outline,
+                    color: Colors.red,
+                    message: 'Invalid Username or Password',
                   ),
-                )
-              : const SizedBox.shrink(), // No dialog shown if login is still in progress
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPopupDialog({
+    required IconData icon,
+    required Color color,
+    required String message,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 10,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 36, color: color),
+            const SizedBox(width: 12),
+            Text(
+              message,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

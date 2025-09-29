@@ -105,19 +105,43 @@ class _HomePageState extends State<HomePage> {
       ),
       // Floating action button in the middle of bottom nav
       floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ChatbotPage(
-              username: widget.username, // Pass username
-              userId: widget.userId,     // Pass userId - FIXED!
-            ),
-          ),
-        ),
-        backgroundColor: Colors.blue,
-        elevation: 0,
-        child: Image.asset('assets/logo.png', width: 30, height: 30),
+  onPressed: () => Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => ChatbotPage(
+        username: widget.username, // Pass username
+        userId: widget.userId,     // Pass userId - FIXED!
       ),
+    ),
+  ),
+  backgroundColor: Colors.blue,
+  elevation: 8,
+  child: Container(
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      gradient: LinearGradient(
+        colors: [Colors.blueAccent, Colors.lightBlueAccent],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.blue.shade300.withOpacity(0.5),
+          blurRadius: 12,
+          offset: Offset(0, 6),
+        ),
+      ],
+    ),
+    child: Center(
+      child: Image.asset(
+        'assets/logo.png',
+        width: 30,
+        height: 30,
+      ),
+    ),
+  ),
+),
+
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }

@@ -34,7 +34,7 @@ class AppTheme {
     return ThemeData(
       primaryColor: AppColors.primary,
       scaffoldBackgroundColor: AppColors.secondaryLightest,
-      colorScheme: ColorScheme.light(
+      colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
         secondary: AppColors.secondary,
         onPrimary: AppColors.white,
@@ -111,10 +111,12 @@ class AppTheme {
         bodyMedium: TextStyle(fontSize: 14, color: AppColors.primaryDark),
         bodySmall: TextStyle(fontSize: 12, color: AppColors.grayDark),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.white,
         elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
       ),
     );
   }
