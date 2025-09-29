@@ -13,9 +13,12 @@ dependencies:
     sdk: flutter
   sqflite: ^2.0.0+4
   path: ^1.8.0
+  webview_flutter: ^4.4.2
   http: ^0.13.5
   flutter_dotenv: ^5.0.2
   cupertino_icons: ^1.0.8
+  intl: ^0.18.0
+  shared_preferences: ^2.0.11
 
 dev_dependencies:
   flutter_test:
@@ -46,6 +49,10 @@ flutter:
     - assets/happy.png
     - assets/sad.png
     - assets/cry.png
+    - assets/gopay.png
+    - assets/ovo.png
+    - assets/dana.png
+    - assets/bank.png
     - .env  
   uses-material-design: true
 
